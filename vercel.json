@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/[action].ts": {
+      "maxDuration": 120
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/((?!api/|models/|assets/|firmware/|favicon.svg).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
