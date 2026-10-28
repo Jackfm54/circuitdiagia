@@ -1,4 +1,4 @@
-import { normalizeNetlist, normalizeSchematic } from "./schematic";
+import { normalizeNetlist, normalizeSchematic } from "./schematic.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
