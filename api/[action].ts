@@ -3,6 +3,7 @@ import { handler as analyze } from "../server/analyze-circuit/index.js";
 import { handler as schematic } from "../server/generate-schematic/index.js";
 import { handler as chat } from "../server/expert-chat/index.js";
 import { bearerToken } from "../server/access.js";
+import { readSupabaseConfig } from "../server/supabaseConfig.js";
 interface Incoming {
   method?: string; headers: Record<string, string | string[] | undefined>;
   query: { action?: string | string[] }; body: unknown;
@@ -12,8 +13,9 @@ export default async function endpoint(req: Incoming, res: Outgoing) {
   const send = (status: number, error: string) => { res.statusCode = status; res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify({ error })); };
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return send(405, "Method not allowed"); }
-  const url = process.env.SUPABASE_URL, key = process.env.SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key || !process.env.OPENAI_API_KEY) return send(503, "Service configuration incomplete");
+  const config = readSupabaseConfig(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY);
+  const { url, key } = config;
+  if (config.problem || !process.env.OPENAI_API_KEY) return send(503, "Service configuration incomplete");
   const token = bearerToken(req.headers.authorization);
   if (!token) return send(401, "Sign in required");
   const cloud = createClient(url, key, { global: { headers: { Authorization: `Bearer ${token}` } }, auth: { persistSession: false, autoRefreshToken: false } });
