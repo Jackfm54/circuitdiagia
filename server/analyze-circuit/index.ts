@@ -1,4 +1,4 @@
-import { addMissingDetections, imageDataUrl, normalizeDiagnostic, normalizeDetections, NormalizedDetection } from "./validation.ts";
+import { addMissingDetections, imageDataUrl, normalizeDiagnostic, normalizeDetections, NormalizedDetection } from "./validation";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
