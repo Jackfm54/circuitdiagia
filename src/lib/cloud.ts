@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-export const configured = Boolean(url && key);
-export const cloud = createClient(url || "https://unconfigured.invalid", key || "unconfigured");
+import { readSupabaseConfig } from "../../server/supabaseConfig";
+export const cloudConfig = readSupabaseConfig(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+export const configured = cloudConfig.problem === null;
+export const cloud = createClient(configured ? cloudConfig.url : "https://unconfigured.invalid", configured ? cloudConfig.key : "unconfigured");
 export async function apiFetch(path: string, options: RequestInit) {
   const { data } = await cloud.auth.getSession();
   if (!data.session) throw new Error("Session expirée / Session expired");
