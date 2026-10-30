@@ -1,73 +1,125 @@
-# CircuitDiagIA
+CircuitDiagIA
+Application web d'aide à l'analyse de cartes électroniques, avec vision par ordinateur, assistance IA et acquisition de mesures série.
 
-Copia independiente para Vercel: React + Vite, OpenAI en funciones de servidor y un proyecto externo de Supabase para cuentas y registros privados. El proyecto original no se modifica ni se utiliza como servicio de esta copia.
+CircuitDiagIA associe l'analyse d'une photographie, la détection locale de composants et des mesures complémentaires pour produire un rapport de diagnostic exploratoire. Les utilisateurs peuvent enregistrer leurs rapports, consulter leur historique et générer des représentations schématiques.
 
-## Incluido
-- Acceso con correo y contraseña, registro con confirmación por correo, cierre de sesión y recuperación de contraseña.
-- Perfil profesional: nombre, foto, profesión, empresa/laboratorio, especialización, ciudad/país y biografía. Los campos son opcionales, editables y no son credenciales profesionales verificadas.
-- Historial privado con foto, resultado, mediciones y fecha; abrir y eliminar informes.
-- Esquemas guardados para informes ya registrados, detección YOLO local, chat con fotos, PDF y guía Arduino Nano.
-- Icono de pestaña derivado del mismo CircuitBoard usado junto al nombre; sin integración ni marcas de la plataforma original.
-- Se conserva la demostración original, claramente identificada y sin guardarla como un diagnóstico real.
+Auteur du projet : Larry Jack Gómez Casalins
+Projet personnel reliant l'expérience en électronique au développement web et à l'intégration de l'intelligence artificielle.
+Contribution personnelle
+Mon travail porte sur :
+- La conception de l'architecture du programme et des flux de diagnostic.
+- La conception de la base de données, des profils utilisateurs et des historiques privés.
+- La conception de la logique d'IA applicative et l'intégration des modèles de vision et de langage dans le parcours d'analyse.
+- Le développement du code des interfaces, des services et du traitement des mesures.
+- La rédaction de la documentation technique, des diagrammes de flux et des procédures de configuration.
+Le projet utilise des modèles et bibliothèques tiers, notamment OpenAI et un modèle de détection PCB exécuté avec ONNX Runtime. Ce dépôt ne documente pas l'entraînement propriétaire de ces modèles ; leur intégration est distincte de la conception de la logique applicative.
+Fonctionnalités
+- Comptes avec confirmation par courriel et récupération de mot de passe.
+- Profil professionnel facultatif : photo, profession, organisation, spécialisation et biographie.
+- Analyse d'images de cartes électroniques et détection locale de composants.
+- Assistant technique avec prise en charge d'images.
+- Connexion série et intégration des mesures dans le parcours de diagnostic.
+- Rapports privés avec photographie, résultat, mesures et date.
+- Historique, consultation et suppression des rapports.
+- Génération et enregistrement de schémas associés aux rapports.
+- Guide matériel, export PDF et mode démonstration identifié.
+Les profils sont déclaratifs et ne constituent pas une vérification de qualifications professionnelles.
+Architecture technique
+Couche	Technologies et responsabilité
+Interface	React, TypeScript, Vite, Tailwind CSS et Radix UI
+Vision locale	Modèle YOLO au format ONNX, exécuté dans le navigateur avec ONNX Runtime Web
+API	Fonctions Vercel et modules serveur TypeScript
+Assistance IA	API OpenAI appelée exclusivement depuis le serveur
+Comptes et données	Supabase Auth, PostgreSQL et stockage privé avec politiques RLS
+Matériel	Web Serial et firmware pour Arduino Nano ATmega328P
+Tests	Tests TypeScript exécutés avec tsx et le test runner Node.js
 
-## 1. Crear TU proyecto externo de Supabase
-Crea un proyecto nuevo en tu propia cuenta. No reutilices el servicio del original.
-1. Abre SQL Editor y ejecuta **supabase/setup.sql** una sola vez sobre el proyecto nuevo.
-2. Se crean `profiles`, `diagnostics`, `schematics`, `ai_usage` y dos espacios privados de archivos: `avatars` y `diagnostic-images`.
-3. Las políticas limitan cada usuario a sus registros y archivos. No hay cuentas administradoras ni privilegios en datos de perfil.
-4. En Authentication, activa correo/contraseña y mantén la confirmación por correo habilitada.
-5. Configura un proveedor SMTP para correos de registro y recuperación en producción; prueba su entrega antes de abrir el registro público.
-6. En URL Configuration pon como Site URL tu dirección HTTPS de Vercel y añade las URLs exactas de esa dirección y `/reset-password` a la lista de redirecciones permitidas. Para pruebas locales añade también las direcciones locales utilizadas.
-7. Copia la Project URL y la clave **publishable/anon**, nunca la clave service_role.
 
-## 2. Preparar Vercel
-Importa el contenido de esta carpeta como un proyecto nuevo (por ejemplo, mediante tu repositorio Git). Selecciona Vite y Node.js 22. Comando: `npm run build`. Salida: `dist`.
+```mermaid
+flowchart TD
+    A[Interface React] --> B[Détection ONNX dans le navigateur]
+    A --> C[Web Serial : mesures Arduino]
+    A --> D[API Vercel authentifiée]
+    D --> E[OpenAI]
+    A --> F[Supabase : comptes et données privées]
+    D --> F
+```
+Flux d'un diagnostic
+```mermaid
+flowchart TD
+    A[Connexion et import de la photo] --> B[Détection locale des composants]
+    B --> C[Ajout éventuel de mesures]
+    C --> D[Vérification du compte et du quota]
+    D --> E[Analyse assistée par IA]
+    E --> F[Consultation et vérification du résultat]
+    F --> G[Enregistrement du rapport privé]
+    G --> H[Génération et sauvegarde du schéma]
+```
+Organisation du dépôt
+Emplacement	Contenu
+src/components	Interface de diagnostic, compte, images et connexion série
+src/lib	Détection, mesures, stockage et traitement des réponses
+src/pages	Diagnostic et historique
+api/[action].ts	Point d'entrée des fonctions Vercel
+server	Contrôle d'accès, analyse, conversation et schémas
+supabase/setup.sql	Schéma et politiques d'accès
+public/models	Modèle ONNX et ressources d'exécution
+public/firmware/circuit_diagnostic.ino	Firmware Arduino Nano
+tests	Tests applicatifs et scénario SQL de confidentialité
 
-Configura estas variables en Vercel, en los entornos que vayas a usar:
 
-| Variable | Valor |
-|---|---|
-| `VITE_SUPABASE_URL` | Project URL de TU proyecto externo |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable/anon key de TU proyecto externo |
-| `SUPABASE_URL` | La misma Project URL; la utiliza el servidor |
-| `SUPABASE_PUBLISHABLE_KEY` | La misma publishable/anon key; la utiliza el servidor |
-| `OPENAI_API_KEY` | Tu clave privada de OpenAI, solo en Vercel |
-| `OPENAI_MODEL` | `gpt-4.1` por defecto; debe aceptar fotos y herramientas |
+Les principales tables sont profiles, diagnostics, schematics et ai_usage. Les images de diagnostic et les avatars utilisent des espaces de stockage privés.
+Installation locale
+Prérequis : Node.js 22, npm, un projet Supabase et une clé OpenAI pour les fonctions IA.
+git clone https://github.com/Jackfm54/circuitdiagia.git
+cd circuitdiagia
+npm ci
+cp .env.example .env
+1. Créer un projet Supabase destiné à cette application.
+2. Exécuter supabase/setup.sql une seule fois sur ce nouveau projet. Ne pas relancer le script tel quel sur une base déjà initialisée.
+3. Activer l'authentification par courriel et configurer les URL de confirmation et de récupération de mot de passe.
+4. Compléter .env avec les variables ci-dessous.
+Variable	Utilisation
+VITE_SUPABASE_URL	URL Supabase exposée au navigateur
+VITE_SUPABASE_PUBLISHABLE_KEY	Clé publique du navigateur
+SUPABASE_URL	URL du même projet côté serveur
+SUPABASE_PUBLISHABLE_KEY	Clé publique utilisée pour vérifier les accès côté serveur
+OPENAI_API_KEY	Clé privée OpenAI, exclusivement côté serveur
+OPENAI_MODEL	Modèle compatible avec les images et les outils ; défaut du projet : gpt-4.1
 
-**Nunca uses un nombre `VITE_` para la clave OpenAI. Nunca subas un archivo con claves a Git.** Los archivos `.env.example` solo tienen campos vacíos; no contienen claves. Las cuentas y correos de tu aplicación actual no se copian: los usuarios deben registrarse en el servicio nuevo.
 
-OpenAI requiere saldo y acceso al modelo. El diagrama como imagen del chat utiliza Responses + image_generation y puede tener coste adicional. Los esquemas SVG detallados/por bloques utilizan Chat Completions con herramientas.
+Ne jamais publier .env ni exposer la clé OpenAI avec un préfixe VITE_. La configuration de cette application n'utilise pas de clé Supabase service_role.
+# Interface seule : ne fournit pas les fonctions API Vercel
+npm run dev
 
-`vercel.json` incluye la resolución de páginas y una duración máxima de 120 segundos para la función. Revisa que tu plan permita ese tiempo; imágenes complejas pueden excederlo. El detector se ejecuta en el navegador, no consume OpenAI. El archivo ONNX es de unos 45 MB: si usas GitHub, súbelo mediante Git local, no su cargador web de archivos de 25 MB.
+# Interface et fonctions API avec les variables configurées
+npx vercel dev
+Tests et déploiement
+npm test
+npm run build
+Importer le dépôt dans Vercel avec le préréglage Vite, la commande npm run build et le dossier de sortie dist. Configurer les variables dans l'environnement d'hébergement et ajouter l'URL HTTPS aux redirections Supabase.
 
-## 3. Primera comprobación real
-1. Despliega y abre tu URL de Vercel.
-2. Crea una cuenta y confirma el correo. Inicia sesión.
-3. Completa y guarda el perfil; recarga la página para comprobar que persiste.
-4. Carga una foto JPEG/PNG/WebP de hasta 2,5 MB y espera el diagnóstico.
-5. Pulsa **Enregistrer le diagnostic**. Abre **Historique**, recarga y vuelve a abrirlo: debe conservar foto y lecturas.
-6. Una vez guardado el informe, genera un esquema. Se guarda asociado al informe y vuelve a cargarse al abrirlo.
-7. Crea una segunda cuenta: no debe ver los informes ni archivos de la primera.
-8. Prueba recuperación de contraseña mediante el correo real.
+Les tests applicatifs s'exécutent sans appel OpenAI. tests/privacy.sql est destiné à une base jetable préparée pour les schémas Auth et Storage ; ne pas l'exécuter en production. La présence des tests ne prouve pas le fonctionnement des services déployés.
+Vérifications dans l'environnement déployé
+1. Créer un compte, confirmer le courriel et tester la récupération de mot de passe.
+2. Enregistrer un profil puis vérifier sa persistance après rechargement.
+3. Analyser une image de test, sauvegarder le rapport et le rouvrir depuis l'historique.
+4. Générer un schéma pour un rapport enregistré et vérifier sa conservation.
+5. Utiliser un second compte pour vérifier l'isolation des rapports et des fichiers.
+6. Tester séparément la connexion série avec un montage de mesure adapté.
+Matériel et limites
+Le firmware fourni vise la Nano classique ATmega328P, à 115 200 bauds, avec A0 activé par défaut. Il mesure uniquement une tension continue : il ne mesure pas directement les résistances, diodes, condensateurs ou la continuité. Fermer le moniteur série avant de connecter le navigateur.
 
-Las fotografías grandes se rechazan antes de analizar porque Vercel limita el tamaño del cuerpo de las funciones; no se comprimen automáticamente para no perder detalles de componentes. Hay un límite de protección de **50 solicitudes de IA por usuario y día UTC**, configurable en la función SQL `consume_ai_request`; incluye intentos fallidos y generación de diagramas. No es un plan comercial ni una garantía de coste. La página de historial carga 20 informes por página.
+Vérifier le montage au multimètre et respecter la tension admissible de l'entrée. Ne jamais relier directement l'Arduino à une carte sous tension secteur ou à un point inconnu. Les essais physiques demandent une préparation adaptée ; le logiciel ne garantit pas la sécurité électrique du montage.
+- Le diagnostic visuel reste une hypothèse à confirmer par des mesures appropriées.
+- Le détecteur peut omettre ou confondre des composants ; le schéma est inféré, pas fourni par le fabricant.
+- Les images d'entrée sont limitées à 2,5 Mo dans le parcours documenté du projet.
+- Le quota de protection est de 50 demandes IA par utilisateur et par jour UTC, configurable dans consume_ai_request. Il ne constitue pas une garantie de coût.
+- Le modèle ONNX est téléchargé par le navigateur et peut allonger le premier chargement.
+- Les accès, courriels, appels IA et mesures physiques doivent être validés dans l'environnement déployé.
+Ressources et licences tierces
+Le projet inclut des ressources de détection PCB associées à pcb-component-detection-dataset-yolo, avec l'attribution CC BY 4.0 indiquée dans la documentation préexistante, ainsi qu'ONNX Runtime. Conserver les mentions et licences des dépendances et ressources utilisées.
 
-## Arduino
-Usa `public/firmware/circuit_diagnostic.ino`, Nano clásica ATmega328P, USB, 115200 baudios. Solo A0 habilitado por defecto, voltaje DC únicamente. El firmware no está preparado para UNO con A6/A7 inexistentes ni ESP32. No mide resistencias, capacitores, diodos o continuidad. Verifica primero con multímetro y fuente segura; nunca conectes una tarjeta desconocida o un punto superior a la referencia/5 V. Cierra el monitor serie antes de conectar CircuitDiagIA.
-
-## Desarrollo y pruebas
-- `npm install`
-- `npm run dev` muestra el cliente; no emula funciones Vercel.
-- `npx vercel dev` permite probar cliente y funciones con las variables configuradas localmente (no las publiques).
-- `npm test` ejecuta 31 pruebas sin llamar a OpenAI.
-- `tests/privacy.sql` prueba privacidad y cuotas con dos identidades ficticias en una base **desechable**, tras preparar los esquemas de auth/storage. No ejecutes esta prueba sobre producción.
-
-## Verificación realizada y pendientes
-La copia compila; las comprobaciones de tipos y 31 pruebas pasan. El SQL completo se aplicó a un PostgreSQL temporal aislado con sustitutos de auth/storage y pasó las pruebas de separación entre dos usuarios, vinculación de esquemas y cuota. Esto no verifica las configuraciones alojadas de Supabase ni su correo.
-
-No se ha desplegado en tu Vercel, creado tu proyecto externo ni llamado OpenAI con tu clave. El acceso real, guardado/lectura en TU servicio y mediciones USB físicas deben verificarse siguiendo la sección 3. No se incluyen claves privadas, usuarios reales ni datos del servicio original.
-
-El diagnóstico visual es provisional; YOLO puede omitir/confundir componentes. El esquema es inferido, no el original del fabricante. Confirma cualquier avería con mediciones apropiadas.
-
+Les conditions du logiciel Ultralytics et du checkpoint sont distinctes de celles du jeu de données. Vérifier les droits applicables avant une distribution commerciale. Les modèles OpenAI et les ressources tierces ne sont pas présentés comme des créations de l'auteur de l'application.
 ## Licencias
 Se incluyen recursos del modelo PCB (github.com/wangshnegqi/pcb-component-detection-dataset-yolo, atribución CC BY 4.0 indicada en el proyecto original) y ONNX Runtime. Conserva las licencias de dependencias instaladas. El entrenamiento/exportación utiliza el ecosistema Ultralytics: revisa sus condiciones AGPL/comerciales y las del checkpoint antes de distribuir comercialmente; la atribución del dataset no sustituye las licencias del software/modelo. No se ha efectuado una auditoría legal de esas licencias.
